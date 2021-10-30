@@ -2,6 +2,7 @@ import logging
 import os
 from urllib import parse
 import pyshorteners
+import sys
 
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, update
 from telegram.chataction import ChatAction
@@ -127,7 +128,27 @@ def fallback(update: Update, context: CallbackContext):
 def main():
     # Obtener Token
     TOKEN = os.getenv('TOKEN')
+    mode = os.getenv('MODE')
     
+    # Eligiendo el modo      
+    if mode == 'dev':
+        # Modo de desarrollo
+        def run(updater):
+            # Start Bot
+            updater.start_polling()
+            # Cerrar co Ctrl+C
+            updater.idle()
+    elif mode == 'prod':
+        # WEBHOOKS
+        def run(updater):
+            PORT = int(os.environ.get("PORT", "8343"))
+            HEROKU_APP_NAME = os.environ.get("HEROKU_APP_NAME")
+            updater.start_webhook(Listen="0.0.0.0", port=PORT, url_path=TOKEN)
+            updater.bot.set_webhook(f"https://{HEROKU_APP_NAME}.herokuapp.com/{TOKEN}")
+    else:
+        logger.info('No se especifico el MODE')      
+        sys.exit()
+        
     # Creo el UPDATER
     updater = Updater(TOKEN)
     
@@ -152,10 +173,8 @@ def main():
     
     # Agrego los Hadlers
     dispatcher.add_handler(search_conversation)
-    # Start Bot
-    updater.start_polling()
-    # Cerrar co Ctrl+C
-    updater.idle() 
+
+    run(updater)
 
 if __name__=='__main__':
     main()
