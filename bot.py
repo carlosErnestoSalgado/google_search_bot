@@ -137,25 +137,6 @@ def main():
     TOKEN = os.getenv('TOKEN')
     mode = os.getenv('MODE')
          
-    # Eligiendo el modo      
-    if mode == 'dev':
-        # Modo de desarrollo
-        def run(updater):
-            # Start Bot
-            updater.start_polling()
-            # Cerrar co Ctrl+C
-            updater.idle()
-    elif mode == 'prod':
-        # WEBHOOKS
-        def run(updater):
-            PORT = int(os.environ.get("PORT", "8443"))
-            HEROKU_APP_NAME = os.environ.get("HEROKU_APP_NAME")
-            updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TOKEN)
-            updater.bot.set_webhook(f"https://{HEROKU_APP_NAME}.herokuapp.com/{TOKEN}")
-    else:
-        logger.info('No se especifico el MODE')      
-        sys.exit()
-        
     # Creo el UPDATER
     updater = Updater(TOKEN)
     
@@ -177,11 +158,15 @@ def main():
         },
         fallbacks=[]
     )
-    
     # Agrego los Hadlers
     dispatcher.add_handler(search_conversation)
 
-    run(updater)
+    # Weebhook
+    PORT = int(os.environ.get("PORT", "8443"))
+    HEROKU_APP_NAME = os.environ.get("HEROKU_APP_NAME")
+    updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TOKEN, webhook_url=f"https://{HEROKU_APP_NAME}.herokuapp.com/{TOKEN}")
+    #updater.bot.set_webhook(f"https://{HEROKU_APP_NAME}.herokuapp.com/{TOKEN}")
+    updater.idle()
 
 if __name__=='__main__':
     main()
