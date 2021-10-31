@@ -4,6 +4,9 @@ from urllib import parse
 import pyshorteners
 import sys
 
+import requests
+from flask import Flask, request
+
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, update
 from telegram.chataction import ChatAction
 from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler,Filters, CallbackQueryHandler, InlineQueryHandler, ConversationHandler
@@ -129,7 +132,10 @@ def main():
     # Obtener Token
     TOKEN = os.getenv('TOKEN')
     mode = os.getenv('MODE')
-    
+                  
+    app = Flask(__name__)      
+    app.route('/', methods=['POST'])  
+        
     # Eligiendo el modo      
     if mode == 'dev':
         # Modo de desarrollo
@@ -141,10 +147,8 @@ def main():
     elif mode == 'prod':
         # WEBHOOKS
         def run(updater):
-            PORT = int(os.environ.get("PORT", "8443"))
-            HEROKU_APP_NAME = os.environ.get("HEROKU_APP_NAME")
-            updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TOKEN)
-            updater.bot.set_webhook(f"https://{HEROKU_APP_NAME}.herokuapp.com/{TOKEN}")
+            PORT = int(os.environ.get("PORT", "5000"))
+            app.run(host='0.0.0.0', port=PORT, debug=True)
     else:
         logger.info('No se especifico el MODE')      
         sys.exit()
