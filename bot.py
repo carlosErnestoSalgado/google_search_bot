@@ -13,6 +13,10 @@ from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandle
 
 from googlesearch import search
 
+
+
+
+
 # Instanciar acortador de url
 shorter = pyshorteners.Shortener()
 
@@ -132,10 +136,7 @@ def main():
     # Obtener Token
     TOKEN = os.getenv('TOKEN')
     mode = os.getenv('MODE')
-                  
-    app = Flask(__name__)      
-    app.route('/', methods=['POST'])  
-        
+         
     # Eligiendo el modo      
     if mode == 'dev':
         # Modo de desarrollo
@@ -147,8 +148,10 @@ def main():
     elif mode == 'prod':
         # WEBHOOKS
         def run(updater):
-            PORT = int(os.environ.get("PORT", "5000"))
-            app.run(host='0.0.0.0', port=PORT, debug=True)
+            PORT = int(os.environ.get("PORT", "8443"))
+            HEROKU_APP_NAME = os.environ.get("HEROKU_APP_NAME")
+            updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TOKEN)
+            updater.bot.set_webhook(f"https://{HEROKU_APP_NAME}.herokuapp.com/{TOKEN}")
     else:
         logger.info('No se especifico el MODE')      
         sys.exit()
